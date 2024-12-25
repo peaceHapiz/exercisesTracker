@@ -44,10 +44,12 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const _id = req.params._id;
   const { description, duration, date } = req.body;
 
+  // Validasi ID pengguna
   if (!usersDb[_id]) {
     return res.status(404).json({ error: 'User dengan _id tersebut tidak ditemukan' });
   }
 
+  // Validasi input wajib
   if (!description || !duration) {
     return res.status(400).json({ error: 'Isi semua kolom wajib (description dan duration)' });
   }
@@ -57,19 +59,28 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     return res.status(400).json({ error: 'Duration harus berupa angka' });
   }
 
+  // Jika tidak ada tanggal, gunakan tanggal saat ini
   const exerciseDate = date ? new Date(date) : new Date();
   if (isNaN(exerciseDate.getTime())) {
     return res.status(400).json({ error: 'Format tanggal tidak valid' });
   }
 
-  const formattedDate = exerciseDate.toISOString().split('T')[0]; // Format yyyy-mm-dd
+  // Format tanggal menjadi string `dateString`
+  const formattedDate = exerciseDate.toDateString();
 
+  // Inisialisasi database latihan jika belum ada
   if (!exerciseDb[_id]) {
     exerciseDb[_id] = [];
   }
 
-  exerciseDb[_id].push({ description, duration: parsedDuration, date: formattedDate });
+  // Tambahkan latihan ke log pengguna
+  exerciseDb[_id].push({
+    description,
+    duration: parsedDuration,
+    date: formattedDate,
+  });
 
+  // Kirimkan respons dengan detail pengguna dan latihan yang ditambahkan
   res.json({
     _id,
     username: usersDb[_id],
@@ -78,6 +89,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     date: formattedDate,
   });
 });
+
 
 // Mendapatkan log latihan pengguna
 app.get('/api/users/:_id/logs', (req, res) => {
